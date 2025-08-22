@@ -534,6 +534,7 @@ func onHttpResponseBody(ctx wrapper.HttpContext, config PluginConfig, body []byt
 	log.Infof("first content: %s", rawResponse.Choices[0].Message.Content)
 	//如果gpt返回的内容不是空的
 	if rawResponse.Choices[0].Message.Content != "" {
+
 		//进入agent的循环思考，工具调用的过程中
 		retType, _ := toolsCall(ctx, config.LLMClient, config.LLMInfo, config.JsonResp, config.APIsParam, config.APIClient, rawResponse.Choices[0].Message.Content, rawResponse, log)
 		return retType

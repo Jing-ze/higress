@@ -131,6 +131,7 @@ func parseConfig(json gjson.Result, c *PluginConfig, log log.Log) error {
 	}
 	c.RedisInfo.ServicePort = int(json.Get("redis.servicePort").Int())
 	if c.RedisInfo.ServicePort == 0 {
+
 		if strings.HasSuffix(c.RedisInfo.ServiceName, ".static") {
 			// use default logic port which is 80 for static service
 			c.RedisInfo.ServicePort = 80

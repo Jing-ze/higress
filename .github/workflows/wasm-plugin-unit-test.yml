@@ -193,10 +193,6 @@ jobs:
         go-version: 1.24
         cache: true
         
-    - name: Install required tools
-      run: |
-        go install github.com/wadey/gocovmerge@latest
-        
     - name: Download all test results
       uses: actions/download-artifact@v4
       with:
@@ -329,13 +325,28 @@ jobs:
           echo "Found coverage files:"
           echo "$coverage_files"
           
-          # 确保gocovmerge在PATH中
-          export PATH=$PATH:$GOPATH/bin
+          # 使用Go内置的cover工具合并覆盖率文件
+          echo "Using go tool cover -merge to combine coverage files..."
           
-          # 合并覆盖率报告
-          gocovmerge $coverage_files > ${{ github.workspace }}/merged_coverage.out
+          # 获取第一个文件作为基础
+          first_file=$(echo "$coverage_files" | head -n1)
+          echo "Base file: $first_file"
           
-          echo "Coverage reports merged successfully"
+          # 创建合并文件
+          cp "$first_file" ${{ github.workspace }}/merged_coverage.out
+          
+          # 逐个合并其他文件
+          remaining_files=$(echo "$coverage_files" | tail -n +2)
+          if [ -n "$remaining_files" ]; then
+            for file in $remaining_files; do
+              if [ -f "$file" ]; then
+                echo "Merging: $file"
+                go tool cover -merge="$file" ${{ github.workspace }}/merged_coverage.out -o ${{ github.workspace }}/merged_coverage.out
+              fi
+            done
+          fi
+          
+          echo "Coverage reports merged successfully with go tool cover"
           echo "Merged file size: $(wc -c < ${{ github.workspace }}/merged_coverage.out) bytes"
         else
           echo "No coverage files found"

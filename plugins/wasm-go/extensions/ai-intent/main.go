@@ -191,6 +191,7 @@ func parseConfig(json gjson.Result, c *PluginConfig, log log.Log) error {
 	}
 	c.KeyFrom.ResponseBody = json.Get("keyFrom.responseBody").String()
 	if c.KeyFrom.ResponseBody == "" {
+
 		c.KeyFrom.ResponseBody = "choices.0.message.content"
 	}
 	log.Debug("Init ai intent's components successfully.")
