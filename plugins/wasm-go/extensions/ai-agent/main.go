@@ -524,6 +524,7 @@ func onHttpResponseBody(ctx wrapper.HttpContext, config PluginConfig, body []byt
 
 	//初始化接收gpt返回内容的结构体
 	var rawResponse Response
+
 	err := json.Unmarshal(body, &rawResponse)
 	if err != nil {
 		log.Debugf("[onHttpResponseBody] body to json err: %s", err.Error())

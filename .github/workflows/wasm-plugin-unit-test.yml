@@ -187,6 +187,16 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
+    - name: Set up Go 1.24
+      uses: actions/setup-go@v4
+      with:
+        go-version: 1.24
+        cache: true
+        
+    - name: Install required tools
+      run: |
+        go install github.com/wadey/gocovmerge@latest
+        
     - name: Download all test results
       uses: actions/download-artifact@v4
       with:
@@ -227,9 +237,31 @@ jobs:
         done
         echo "=== END COVERAGE ARTIFACTS DEBUG ==="
   
-    - name: Install required tools
+    - name: Debug coverage artifacts download
       run: |
-        go install github.com/wadey/gocovmerge@latest
+        echo "=== COVERAGE ARTIFACTS DEBUG ==="
+        echo "Checking what was downloaded..."
+        echo ""
+        echo "Current working directory: $(pwd)"
+        echo "GitHub workspace: ${{ github.workspace }}"
+        echo ""
+        echo "Listing all files in current directory:"
+        ls -la
+        echo ""
+        echo "Looking for coverage files specifically:"
+        find . -name "*coverage*" 2>/dev/null || echo "No coverage files found"
+        echo ""
+        echo "Looking for .out files:"
+        find . -name "*.out" 2>/dev/null || echo "No .out files found"
+        echo ""
+        echo "Checking if artifacts are in subdirectories:"
+        for dir in */; do
+          if [ -d "$dir" ]; then
+            echo "Directory: $dir"
+            ls -la "$dir" | grep -E "(coverage|\.out)" || echo "  No coverage or .out files"
+          fi
+        done
+        echo "=== END COVERAGE ARTIFACTS DEBUG ==="
         
     - name: Generate comprehensive test summary
       run: |
@@ -346,6 +378,12 @@ jobs:
         if [ -n "$coverage_files" ]; then
           echo "Found coverage files:"
           echo "$coverage_files"
+          
+          # 确保gocovmerge在PATH中
+          export PATH=$PATH:$GOPATH/bin
+          echo "Updated PATH: $PATH"
+          echo "Testing gocovmerge:"
+          which gocovmerge || echo "gocovmerge still not found"
           
           # 合并覆盖率报告
           gocovmerge $coverage_files > ${{ github.workspace }}/merged_coverage.out

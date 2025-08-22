@@ -166,6 +166,7 @@ func parseConfig(json gjson.Result, c *PluginConfig, log log.Log) error {
 		FQDN: c.RedisInfo.ServiceName,
 		Port: int64(c.RedisInfo.ServicePort),
 	})
+
 	return c.redisClient.Init(c.RedisInfo.Username, c.RedisInfo.Password, int64(c.RedisInfo.Timeout), wrapper.WithDataBase(c.RedisInfo.Database))
 }
 
