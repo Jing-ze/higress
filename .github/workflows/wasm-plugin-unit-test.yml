@@ -2,7 +2,7 @@ name: Wasm Plugin Unit Tests(GO)
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, test]
     paths:
       - 'plugins/wasm-go/extensions/**'
       - '.github/workflows/wasm-plugin-unit-test.yml'
@@ -332,6 +332,18 @@ jobs:
         echo ""
         echo "Looking for any files with 'coverage' in name:"
         find ${{ github.workspace }} -name "*coverage*" 2>/dev/null || echo "No files with 'coverage' in name found"
+        echo ""
+        echo "Looking for files starting with 'coverage-':"
+        find ${{ github.workspace }} -name "coverage-*" 2>/dev/null || echo "No files starting with 'coverage-' found"
+        echo ""
+        echo "Looking for files ending with '.out':"
+        find ${{ github.workspace }} -name "*.out" 2>/dev/null || echo "No files ending with '.out' found"
+        echo ""
+        echo "Looking for files with 'coverage' anywhere in name:"
+        find ${{ github.workspace }} -name "*coverage*" 2>/dev/null || echo "No files with 'coverage' anywhere in name found"
+        echo ""
+        echo "Searching recursively in all subdirectories:"
+        find ${{ github.workspace }} -type f -name "*coverage*" 2>/dev/null || echo "No coverage files found recursively"
         echo "=== END DEBUG INFO ==="
         echo ""
         
