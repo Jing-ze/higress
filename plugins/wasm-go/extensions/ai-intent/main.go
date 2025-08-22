@@ -224,6 +224,7 @@ func onHttpRequestBody(ctx wrapper.HttpContext, config PluginConfig, body []byte
 		proxyUrl,
 		proxyRequestHeader,
 		proxyRequestBody,
+
 		func(statusCode int, responseHeaders http.Header, responseBody []byte) {
 			log.Debug("Start llm.llmProxyClient func")
 			log.Infof("llm.llmProxyClient statusCode is:%s", statusCode)

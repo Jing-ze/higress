@@ -71,7 +71,7 @@ func parseConfig(json gjson.Result, config *MyConfig, log log.Log) error {
 	}
 	config.HumanId = json.Get("HumanId").String()
 	if config.HumanId == "" {
-		config.HumanId = json.Get("HumainId").String()  // for compatible
+		config.HumanId = json.Get("HumainId").String() // for compatible
 	}
 	if config.HumanId == "" {
 		config.HumanId = "Human:"
@@ -121,6 +121,7 @@ func onHttpRequestHeaders(ctx wrapper.HttpContext, config MyConfig, log log.Log)
 	}, []byte(body),
 		func(statusCode int, responseHeaders http.Header, responseBody []byte) {
 			var headers [][2]string
+
 			for key, value := range responseHeaders {
 				headers = append(headers, [2]string{key, value[0]})
 			}

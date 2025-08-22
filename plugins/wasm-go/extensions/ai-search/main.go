@@ -108,6 +108,7 @@ func parseConfig(json gjson.Result, config *Config) error {
 		}
 
 		config.referenceLocation = json.Get("referenceLocation").String()
+
 		if config.referenceLocation == "" {
 			config.referenceLocation = "head" // Default to head if not specified
 		} else if config.referenceLocation != "head" && config.referenceLocation != "tail" {

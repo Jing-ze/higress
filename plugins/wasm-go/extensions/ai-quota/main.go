@@ -139,6 +139,7 @@ func onHttpRequestHeaders(context wrapper.HttpContext, config QuotaConfig) types
 		return deniedNoKeyAuthData()
 	}
 	if consumer == "" {
+
 		return deniedUnauthorizedConsumer()
 	}
 

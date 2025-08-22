@@ -79,6 +79,7 @@ func parseConfig(json gjson.Result, config *AIRagConfig, log log.Log) error {
 	config.DashScopeClient = wrapper.NewClusterClient(wrapper.FQDNCluster{
 		FQDN: json.Get("dashscope.serviceFQDN").String(),
 		Port: json.Get("dashscope.servicePort").Int(),
+
 		Host: json.Get("dashscope.serviceHost").String(),
 	})
 	config.DashVectorAPIKey = json.Get("dashvector.apiKey").String()
