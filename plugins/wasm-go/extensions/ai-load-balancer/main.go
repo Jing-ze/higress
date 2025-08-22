@@ -73,6 +73,7 @@ func onHttpRequestBody(ctx wrapper.HttpContext, config Config, body []byte) type
 }
 
 func onHttpResponseHeaders(ctx wrapper.HttpContext, config Config) types.Action {
+
 	return config.lb.HandleHttpResponseHeaders(ctx)
 }
 

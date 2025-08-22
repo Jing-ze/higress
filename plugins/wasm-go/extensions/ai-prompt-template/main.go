@@ -16,6 +16,7 @@ func main() {}
 func init() {
 	wrapper.SetCtx(
 		"ai-prompt-template",
+
 		wrapper.ParseConfigBy(parseConfig),
 		wrapper.ProcessRequestHeadersBy(onHttpRequestHeaders),
 		wrapper.ProcessRequestBodyBy(onHttpRequestBody),

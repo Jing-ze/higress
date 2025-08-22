@@ -218,6 +218,7 @@ func onHttpRequestBody(ctx wrapper.HttpContext, config PluginConfig, body []byte
 	log.Infof("[onHttpRequestBody] after prompt is:  %s", promptStr)
 	proxyUrl, proxyRequestBody, proxyRequestHeader := generateProxyRequest(&config, []string{string(promptStr)}, log)
 	log.Infof("[onHttpRequestBody] proxyUrl is:  %s", proxyUrl)
+
 	log.Infof("[onHttpRequestBody] proxyRequestBody is:  %s", string(proxyRequestBody))
 	//调用大模型 获取意向类型
 	llmProxyErr := config.LLMInfo.ProxyClient.Post(

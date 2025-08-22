@@ -347,7 +347,7 @@ jobs:
             echo "Multiple files, merging sequentially with gocovmerge..."
             
             for ((i=1; i<file_count; i++)); do
-              local current_file="${coverage_array[i]}"
+              current_file="${coverage_array[i]}"
               
               echo "Merging file $((i+1))/$file_count: $current_file"
               

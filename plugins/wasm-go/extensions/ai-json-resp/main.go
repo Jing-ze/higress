@@ -195,8 +195,9 @@ func parseConfig(result gjson.Result, config *PluginConfig, log log.Log) error {
 
 	config.serviceClient = wrapper.NewClusterClient(wrapper.DnsCluster{
 		ServiceName: config.serviceName,
-		Port:        int64(config.servicePort),
-		Domain:      config.serviceDomain,
+
+		Port:   int64(config.servicePort),
+		Domain: config.serviceDomain,
 	})
 
 	enableSwagger := result.Get("enableSwagger").Bool()

@@ -19,6 +19,7 @@ func init() {
 	wrapper.SetCtx(
 		"ai-prompt-decorator",
 		wrapper.ParseConfig(parseConfig),
+
 		wrapper.ProcessRequestHeaders(onHttpRequestHeaders),
 		wrapper.ProcessRequestBody(onHttpRequestBody),
 	)

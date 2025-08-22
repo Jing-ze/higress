@@ -137,6 +137,7 @@ func parseConfig(json gjson.Result, c *PluginConfig, log log.Log) error {
 
 			c.RedisInfo.ServicePort = 80
 		} else {
+
 			c.RedisInfo.ServicePort = 6379
 		}
 	}

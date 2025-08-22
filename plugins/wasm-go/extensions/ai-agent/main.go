@@ -527,6 +527,7 @@ func onHttpResponseBody(ctx wrapper.HttpContext, config PluginConfig, body []byt
 
 	err := json.Unmarshal(body, &rawResponse)
 	if err != nil {
+
 		log.Debugf("[onHttpResponseBody] body to json err: %s", err.Error())
 		return types.ActionContinue
 	}
