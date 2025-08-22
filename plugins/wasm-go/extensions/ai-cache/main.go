@@ -144,6 +144,7 @@ func onHttpResponseHeaders(ctx wrapper.HttpContext, c config.PluginConfig, log l
 		ctx.SetUserAttribute("cache_status", "miss")
 		ctx.WriteUserAttributeToLogWithKey(wrapper.AILogKey)
 	}
+
 	contentType, _ := proxywasm.GetHttpResponseHeader("content-type")
 	if strings.Contains(contentType, "text/event-stream") {
 		ctx.SetContext(STREAM_CONTEXT_KEY, struct{}{})

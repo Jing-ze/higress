@@ -529,6 +529,7 @@ func onHttpResponseBody(ctx wrapper.HttpContext, config PluginConfig, body []byt
 		log.Debugf("[onHttpResponseBody] body to json err: %s", err.Error())
 		return types.ActionContinue
 	}
+
 	log.Infof("first content: %s", rawResponse.Choices[0].Message.Content)
 	//如果gpt返回的内容不是空的
 	if rawResponse.Choices[0].Message.Content != "" {

@@ -200,6 +200,32 @@ jobs:
         pattern: coverage-*
         merge-multiple: true
         path: ${{ github.workspace }}
+        
+    - name: Debug coverage artifacts download
+      run: |
+        echo "=== COVERAGE ARTIFACTS DEBUG ==="
+        echo "Checking what was downloaded..."
+        echo ""
+        echo "Current working directory: $(pwd)"
+        echo "GitHub workspace: ${{ github.workspace }}"
+        echo ""
+        echo "Listing all files in current directory:"
+        ls -la
+        echo ""
+        echo "Looking for coverage files specifically:"
+        find . -name "*coverage*" 2>/dev/null || echo "No coverage files found"
+        echo ""
+        echo "Looking for .out files:"
+        find . -name "*.out" 2>/dev/null || echo "No .out files found"
+        echo ""
+        echo "Checking if artifacts are in subdirectories:"
+        for dir in */; do
+          if [ -d "$dir" ]; then
+            echo "Directory: $dir"
+            ls -la "$dir" | grep -E "(coverage|\.out)" || echo "  No coverage or .out files"
+          fi
+        done
+        echo "=== END COVERAGE ARTIFACTS DEBUG ==="
   
     - name: Install required tools
       run: |
@@ -344,6 +370,15 @@ jobs:
         echo ""
         echo "Searching recursively in all subdirectories:"
         find ${{ github.workspace }} -type f -name "*coverage*" 2>/dev/null || echo "No coverage files found recursively"
+        echo ""
+        echo "Checking if downloaded artifacts are in subdirectories:"
+        find ${{ github.workspace }} -type d -name "*" | head -10
+        echo ""
+        echo "Looking for any .out files:"
+        find ${{ github.workspace }} -name "*.out" 2>/dev/null || echo "No .out files found"
+        echo ""
+        echo "Checking file permissions and ownership:"
+        ls -la *.out 2>/dev/null || echo "No .out files in current directory"
         echo "=== END DEBUG INFO ==="
         echo ""
         
