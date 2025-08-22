@@ -150,7 +150,7 @@ jobs:
           gotestsum --junitfile ../../../../test-results-${{ matrix.plugin }}.xml \
                    --format standard-verbose \
                    --jsonfile ../../../../test-output-${{ matrix.plugin }}.json \
-                   -- -coverprofile=coverage.out -covermode=atomic -coverpkg=./... ./...
+                   -- -coverprofile=coverage-${{ matrix.plugin }}.out -covermode=atomic -coverpkg=./... ./...
           
           echo "✅ Tests completed for ${{ matrix.plugin }}"
         else
@@ -173,8 +173,8 @@ jobs:
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: coverage-${{ matrix.plugin }}.out
-        path: plugins/wasm-go/extensions/${{ matrix.plugin }}/coverage.out
+        name: coverage-${{ matrix.plugin }}
+        path: plugins/wasm-go/extensions/${{ matrix.plugin }}/coverage-${{ matrix.plugin }}.out
         retention-days: 30
 
   test-summary:
@@ -340,50 +340,8 @@ jobs:
       run: |
         echo "Merging coverage reports..."
         
-        # 调试信息：显示当前状态
-        echo "=== DEBUG INFO ==="
-        echo "Current working directory: $(pwd)"
-        echo "GitHub workspace: ${{ github.workspace }}"
-        echo "Current directory contents:"
-        ls -la
-        echo ""
-        echo "GitHub workspace contents:"
-        ls -la ${{ github.workspace }}
-        echo ""
-        echo "Looking for coverage files in current directory:"
-        find . -name "coverage-*" 2>/dev/null || echo "No coverage files found in current directory"
-        echo ""
-        echo "Looking for coverage files in GitHub workspace:"
-        find ${{ github.workspace }} -name "coverage-*" 2>/dev/null || echo "No coverage files found in GitHub workspace"
-        echo ""
-        echo "Looking for any files with 'coverage' in name:"
-        find ${{ github.workspace }} -name "*coverage*" 2>/dev/null || echo "No files with 'coverage' in name found"
-        echo ""
-        echo "Looking for files starting with 'coverage-':"
-        find ${{ github.workspace }} -name "coverage-*" 2>/dev/null || echo "No files starting with 'coverage-' found"
-        echo ""
-        echo "Looking for files ending with '.out':"
-        find ${{ github.workspace }} -name "*.out" 2>/dev/null || echo "No files ending with '.out' found"
-        echo ""
-        echo "Looking for files with 'coverage' anywhere in name:"
-        find ${{ github.workspace }} -name "*coverage*" 2>/dev/null || echo "No files with 'coverage' anywhere in name found"
-        echo ""
-        echo "Searching recursively in all subdirectories:"
-        find ${{ github.workspace }} -type f -name "*coverage*" 2>/dev/null || echo "No coverage files found recursively"
-        echo ""
-        echo "Checking if downloaded artifacts are in subdirectories:"
-        find ${{ github.workspace }} -type d -name "*" | head -10
-        echo ""
-        echo "Looking for any .out files:"
-        find ${{ github.workspace }} -name "*.out" 2>/dev/null || echo "No .out files found"
-        echo ""
-        echo "Checking file permissions and ownership:"
-        ls -la *.out 2>/dev/null || echo "No .out files in current directory"
-        echo "=== END DEBUG INFO ==="
-        echo ""
-        
         # 使用绝对路径查找，更可靠
-        coverage_files=$(find ${{ github.workspace }} -name "coverage-*" -o -name "coverage-*.out")
+        coverage_files=$(find ${{ github.workspace }} -name "coverage-*")
         
         if [ -n "$coverage_files" ]; then
           echo "Found coverage files:"
