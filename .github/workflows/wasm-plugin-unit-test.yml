@@ -211,57 +211,7 @@ jobs:
         merge-multiple: true
         path: ${{ github.workspace }}
         
-    - name: Debug coverage artifacts download
-      run: |
-        echo "=== COVERAGE ARTIFACTS DEBUG ==="
-        echo "Checking what was downloaded..."
-        echo ""
-        echo "Current working directory: $(pwd)"
-        echo "GitHub workspace: ${{ github.workspace }}"
-        echo ""
-        echo "Listing all files in current directory:"
-        ls -la
-        echo ""
-        echo "Looking for coverage files specifically:"
-        find . -name "*coverage*" 2>/dev/null || echo "No coverage files found"
-        echo ""
-        echo "Looking for .out files:"
-        find . -name "*.out" 2>/dev/null || echo "No .out files found"
-        echo ""
-        echo "Checking if artifacts are in subdirectories:"
-        for dir in */; do
-          if [ -d "$dir" ]; then
-            echo "Directory: $dir"
-            ls -la "$dir" | grep -E "(coverage|\.out)" || echo "  No coverage or .out files"
-          fi
-        done
-        echo "=== END COVERAGE ARTIFACTS DEBUG ==="
-  
-    - name: Debug coverage artifacts download
-      run: |
-        echo "=== COVERAGE ARTIFACTS DEBUG ==="
-        echo "Checking what was downloaded..."
-        echo ""
-        echo "Current working directory: $(pwd)"
-        echo "GitHub workspace: ${{ github.workspace }}"
-        echo ""
-        echo "Listing all files in current directory:"
-        ls -la
-        echo ""
-        echo "Looking for coverage files specifically:"
-        find . -name "*coverage*" 2>/dev/null || echo "No coverage files found"
-        echo ""
-        echo "Looking for .out files:"
-        find . -name "*.out" 2>/dev/null || echo "No .out files found"
-        echo ""
-        echo "Checking if artifacts are in subdirectories:"
-        for dir in */; do
-          if [ -d "$dir" ]; then
-            echo "Directory: $dir"
-            ls -la "$dir" | grep -E "(coverage|\.out)" || echo "  No coverage or .out files"
-          fi
-        done
-        echo "=== END COVERAGE ARTIFACTS DEBUG ==="
+
         
     - name: Generate comprehensive test summary
       run: |
@@ -381,9 +331,6 @@ jobs:
           
           # 确保gocovmerge在PATH中
           export PATH=$PATH:$GOPATH/bin
-          echo "Updated PATH: $PATH"
-          echo "Testing gocovmerge:"
-          which gocovmerge || echo "gocovmerge still not found"
           
           # 合并覆盖率报告
           gocovmerge $coverage_files > ${{ github.workspace }}/merged_coverage.out
