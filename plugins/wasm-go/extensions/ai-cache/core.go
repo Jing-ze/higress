@@ -16,6 +16,7 @@ import (
 
 // CheckCacheForKey checks if the key is in the cache, or triggers similarity search if not found.
 func CheckCacheForKey(key string, ctx wrapper.HttpContext, c config.PluginConfig, log logs.Log, stream bool, useSimilaritySearch bool) error {
+
 	activeCacheProvider := c.GetCacheProvider()
 	if activeCacheProvider == nil {
 		log.Debugf("[%s] [CheckCacheForKey] no cache provider configured, performing similarity search", PLUGIN_NAME)

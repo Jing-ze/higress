@@ -2,7 +2,7 @@ name: Wasm Plugin Unit Tests(GO)
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "*" ]
     paths:
       - 'plugins/wasm-go/extensions/**'
       - '.github/workflows/wasm-plugin-unit-test.yml'
@@ -176,6 +176,16 @@ jobs:
         name: coverage-${{ matrix.plugin }}
         path: plugins/wasm-go/extensions/${{ matrix.plugin }}/coverage-${{ matrix.plugin }}.out
         retention-days: 30
+        
+    - name: Upload coverage to Codecov for ${{ matrix.plugin }}
+      uses: codecov/codecov-action@v4
+      if: always()
+      with:
+        file: plugins/wasm-go/extensions/${{ matrix.plugin }}/coverage-${{ matrix.plugin }}.out
+        flags: wasm-go-plugin-${{ matrix.plugin }}
+        name: codecov-${{ matrix.plugin }}
+        fail_ci_if_error: false
+        verbose: true
 
   test-summary:
     name: Test Summary & Coverage
