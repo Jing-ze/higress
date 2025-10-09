@@ -295,15 +295,11 @@ jobs:
               if [ -n "$coverage_stats" ]; then
                 # 提取覆盖率百分比
                 coverage_percent=$(echo "$coverage_stats" | grep -o '[0-9.]*%' | head -1 | sed 's/%//')
-                total_statements=$(echo "$coverage_stats" | awk '{print $3}')
-                covered_statements=$(echo "$coverage_stats" | awk '{print $2}')
                 
                 # 确保数值有效
                 coverage_percent=${coverage_percent:-0}
-                total_statements=${total_statements:-0}
-                covered_statements=${covered_statements:-0}
                 
-                if [ "$total_statements" -gt 0 ]; then
+                if (( $(echo "$coverage_percent > 0" | bc -l) )); then
                   # 根据覆盖率设置颜色和图标
                   if (( $(echo "$coverage_percent >= 80" | bc -l) )); then
                     coverage_icon="🟢"
@@ -315,7 +311,7 @@ jobs:
                     coverage_failed=true
                   fi
                   
-                  echo "$coverage_icon **$plugin_name**: $coverage_percent% ($covered_statements/$total_statements statements)" >> $GITHUB_STEP_SUMMARY
+                  echo "$coverage_icon **$plugin_name**: $coverage_percent%" >> $GITHUB_STEP_SUMMARY
                   
                   # 检查覆盖率门禁
                   if (( $(echo "$coverage_percent < 80" | bc -l) )); then
