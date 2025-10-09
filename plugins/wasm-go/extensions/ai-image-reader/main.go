@@ -119,7 +119,6 @@ func executeReadImage(imageUrls []string, config Config, query string, queryInde
 						log.Errorf("modify request message content failed, err:%v, body:%s", err, body)
 					} else {
 						log.Debugf("modified body:%s", modifiedBody)
-
 						proxywasm.ReplaceHttpRequestBody(modifiedBody)
 					}
 					proxywasm.ResumeHttpRequest()

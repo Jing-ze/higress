@@ -282,10 +282,17 @@ jobs:
         # 覆盖率门禁检查
         coverage_failed=false
         
-        # 解析覆盖率文件
-        for coverage_file in coverage-*.out; do
+        # 解析覆盖率文件 - 使用find命令查找，与注释掉的部分保持一致
+        coverage_files=$(find ${{ github.workspace }} -name "coverage-*.out")
+        
+        if [ -n "$coverage_files" ]; then
+          echo "Found coverage files:"
+          echo "$coverage_files"
+        fi
+        
+        for coverage_file in $coverage_files; do
           if [ -f "$coverage_file" ]; then
-            plugin_name=$(echo "$coverage_file" | sed 's/coverage-\(.*\)\.out/\1/')
+            plugin_name=$(basename "$coverage_file" | sed 's/coverage-\(.*\)\.out/\1/')
             
             # 使用go tool cover解析覆盖率文件
             if command -v go >/dev/null 2>&1; then
