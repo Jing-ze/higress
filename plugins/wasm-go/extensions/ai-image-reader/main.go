@@ -100,7 +100,6 @@ func onHttpRequestBody(ctx wrapper.HttpContext, config Config, body []byte) type
 
 func executeReadImage(imageUrls []string, config Config, query string, queryIndex int, body []byte) types.Action {
 	var imageContents []string
-
 	var totalImages int
 	var finished int
 	for _, imageUrl := range imageUrls {
