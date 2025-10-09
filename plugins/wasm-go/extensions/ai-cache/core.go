@@ -69,7 +69,6 @@ func processCacheHit(key string, response string, stream bool, ctx wrapper.HttpC
 	}
 
 	log.Debugf("[%s] [processCacheHit] cached response for key %s: %s", PLUGIN_NAME, key, response)
-
 	// Escape the response to ensure consistent formatting
 	escapedResponse := strings.Trim(strconv.Quote(response), "\"")
 

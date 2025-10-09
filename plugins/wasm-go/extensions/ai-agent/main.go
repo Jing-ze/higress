@@ -341,7 +341,6 @@ func toolsCallResult(ctx wrapper.HttpContext, llmClient wrapper.HttpClient, llmI
 }
 
 func outputParser(response string, log log.Log) (string, string) {
-
 	log.Debugf("Raw response:%s", response)
 
 	start := strings.Index(response, "```")
