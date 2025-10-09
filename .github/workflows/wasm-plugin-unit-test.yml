@@ -283,7 +283,7 @@ jobs:
         coverage_failed=false
         
         # 解析覆盖率文件 - 使用find命令查找，与注释掉的部分保持一致
-        coverage_files=$(find ${{ github.workspace }} -name "coverage-*.out")
+        coverage_files=$(find ${{ github.workspace }} -name "coverage-*")
         
         if [ -n "$coverage_files" ]; then
           echo "Found coverage files:"
@@ -292,7 +292,7 @@ jobs:
         
         for coverage_file in $coverage_files; do
           if [ -f "$coverage_file" ]; then
-            plugin_name=$(basename "$coverage_file" | sed 's/coverage-\(.*\)\.out/\1/')
+            plugin_name=$(basename "$coverage_file" | sed 's/coverage-\(.*\)/\1/')
             
             # 使用go tool cover解析覆盖率文件
             if command -v go >/dev/null 2>&1; then
