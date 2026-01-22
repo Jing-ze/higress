@@ -1,6 +1,7 @@
 package mcp_session
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -460,5 +461,201 @@ func TestFindNextLineBreak(t *testing.T) {
 				t.Errorf("Expected line break '%v', got '%v'", []byte(tc.expectedBreak), []byte(lineBreak))
 			}
 		})
+	}
+}
+
+// TestIsJSONRPCResponse tests the JSON-RPC response detection
+func TestIsJSONRPCResponse(t *testing.T) {
+	testCases := []struct {
+		name     string
+		body     []byte
+		expected bool
+	}{
+		{
+			name:     "Valid JSON-RPC response",
+			body:     []byte(`{"jsonrpc":"2.0","id":1,"result":{}}`),
+			expected: true,
+		},
+		{
+			name:     "Valid JSON-RPC error",
+			body:     []byte(`{"jsonrpc":"2.0","id":1,"error":{"code":-32600,"message":"Invalid Request"}}`),
+			expected: true,
+		},
+		{
+			name:     "Plain text error",
+			body:     []byte("Jwt is missing"),
+			expected: false,
+		},
+		{
+			name:     "HTML error",
+			body:     []byte("<html><body>401 Unauthorized</body></html>"),
+			expected: false,
+		},
+		{
+			name:     "Empty body",
+			body:     []byte{},
+			expected: false,
+		},
+		{
+			name:     "Nil body",
+			body:     nil,
+			expected: false,
+		},
+		{
+			name:     "JSON without jsonrpc field",
+			body:     []byte(`{"status":"error","message":"unauthorized"}`),
+			expected: false,
+		},
+		{
+			name:     "JSON with wrong jsonrpc version",
+			body:     []byte(`{"jsonrpc":"1.0","id":1,"result":{}}`),
+			expected: false,
+		},
+		{
+			name:     "Malformed JSON",
+			body:     []byte(`{"jsonrpc":"2.0",`),
+			expected: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := common.IsJSONRPCResponse(tc.body)
+			if result != tc.expected {
+				t.Errorf("IsJSONRPCResponse(%q) = %v, expected %v", string(tc.body), result, tc.expected)
+			}
+		})
+	}
+}
+
+// TestWrapHTTPResponseAsJSONRPC tests the HTTP response wrapping functionality
+func TestWrapHTTPResponseAsJSONRPC(t *testing.T) {
+	testCases := []struct {
+		name           string
+		statusCode     int
+		body           string
+		expectedCode   int
+		expectedStatus int
+		containsMsg    string
+	}{
+		{
+			name:           "401 Unauthorized with body",
+			statusCode:     401,
+			body:           "Jwt is missing",
+			expectedCode:   common.JSONRPCHTTPError,
+			expectedStatus: 401,
+			containsMsg:    "HTTP 401 Unauthorized: Jwt is missing",
+		},
+		{
+			name:           "403 Forbidden with body",
+			statusCode:     403,
+			body:           "Access denied",
+			expectedCode:   common.JSONRPCHTTPError,
+			expectedStatus: 403,
+			containsMsg:    "HTTP 403 Forbidden: Access denied",
+		},
+		{
+			name:           "500 Internal Server Error",
+			statusCode:     500,
+			body:           "Internal error",
+			expectedCode:   common.JSONRPCHTTPError,
+			expectedStatus: 500,
+			containsMsg:    "HTTP 500 Internal Server Error: Internal error",
+		},
+		{
+			name:           "Empty body",
+			statusCode:     401,
+			body:           "",
+			expectedCode:   common.JSONRPCHTTPError,
+			expectedStatus: 401,
+			containsMsg:    "HTTP 401 Unauthorized",
+		},
+		{
+			name:           "Unknown status code",
+			statusCode:     999,
+			body:           "Unknown error",
+			expectedCode:   common.JSONRPCHTTPError,
+			expectedStatus: 999,
+			containsMsg:    "HTTP 999 Unknown: Unknown error",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := common.WrapHTTPResponseAsJSONRPC(tc.statusCode, tc.body)
+
+			// Parse the result
+			var response struct {
+				JSONRPC string      `json:"jsonrpc"`
+				ID      interface{} `json:"id"`
+				Error   struct {
+					Code    int    `json:"code"`
+					Message string `json:"message"`
+					Data    struct {
+						HTTPStatus     int    `json:"httpStatus"`
+						HTTPStatusText string `json:"httpStatusText"`
+						Body           string `json:"body"`
+					} `json:"data"`
+				} `json:"error"`
+			}
+
+			if err := json.Unmarshal(result, &response); err != nil {
+				t.Fatalf("Failed to unmarshal wrapped response: %v", err)
+			}
+
+			// Verify JSON-RPC version
+			if response.JSONRPC != "2.0" {
+				t.Errorf("Expected jsonrpc version '2.0', got '%s'", response.JSONRPC)
+			}
+
+			// Verify ID is null
+			if response.ID != nil {
+				t.Errorf("Expected ID to be null, got %v", response.ID)
+			}
+
+			// Verify error code
+			if response.Error.Code != tc.expectedCode {
+				t.Errorf("Expected error code %d, got %d", tc.expectedCode, response.Error.Code)
+			}
+
+			// Verify message contains expected text
+			if response.Error.Message != tc.containsMsg {
+				t.Errorf("Expected message '%s', got '%s'", tc.containsMsg, response.Error.Message)
+			}
+
+			// Verify data.httpStatus
+			if response.Error.Data.HTTPStatus != tc.expectedStatus {
+				t.Errorf("Expected data.httpStatus %d, got %d", tc.expectedStatus, response.Error.Data.HTTPStatus)
+			}
+
+			// Verify data.body
+			if response.Error.Data.Body != tc.body {
+				t.Errorf("Expected data.body '%s', got '%s'", tc.body, response.Error.Data.Body)
+			}
+		})
+	}
+}
+
+// TestWrapHTTPResponseAsJSONRPC_OutputFormat tests the exact output format
+func TestWrapHTTPResponseAsJSONRPC_OutputFormat(t *testing.T) {
+	result := common.WrapHTTPResponseAsJSONRPC(401, "Jwt is missing")
+
+	// Verify the result is valid JSON-RPC
+	if !common.IsJSONRPCResponse(result) {
+		t.Errorf("Wrapped response should be detected as JSON-RPC, but was not")
+	}
+
+	// Verify it can be unmarshaled
+	var response map[string]interface{}
+	if err := json.Unmarshal(result, &response); err != nil {
+		t.Fatalf("Failed to unmarshal: %v", err)
+	}
+
+	// Check structure
+	if _, ok := response["jsonrpc"]; !ok {
+		t.Error("Missing 'jsonrpc' field")
+	}
+	if _, ok := response["error"]; !ok {
+		t.Error("Missing 'error' field")
 	}
 }

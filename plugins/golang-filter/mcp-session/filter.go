@@ -43,6 +43,10 @@ type filter struct {
 	mcpConfigHandler    *handler.MCPConfigHandler
 	ratelimit           bool
 	mcpRatelimitHandler *handler.MCPRatelimitHandler
+
+	// For wrapping non-JSON-RPC responses into JSON-RPC format
+	upstreamStatusCode int  // HTTP status code from upstream response
+	wrapAsJSONRPC      bool // True for SSEUpstream when response is not SSE format (error case)
 }
 
 // Callbacks which are called in request path
@@ -209,10 +213,18 @@ func (f *filter) EncodeHeaders(header api.ResponseHeaderMap, endStream bool) api
 	if !f.needProcess {
 		return api.Continue
 	}
+
+	// Capture upstream HTTP status code for potential JSON-RPC wrapping
+	if statusStr, ok := header.Get(":status"); ok {
+		f.upstreamStatusCode, _ = strconv.Atoi(statusStr)
+	}
+
 	if f.matchedRule.UpstreamType != common.RestUpstream && f.matchedRule.UpstreamType != common.StreamableUpstream {
 		if contentType, ok := header.Get("content-type"); !ok || !strings.HasPrefix(contentType, "text/event-stream") {
-			api.LogDebugf("Skip response body for non-SSE upstream. Content-Type: %s", contentType)
-			f.skipResponseBody = true
+			// Response is NOT SSE format (e.g., error from jwt-auth)
+			// Mark for JSON-RPC wrapping instead of skipping
+			api.LogDebugf("Non-SSE response detected for SSE upstream, will wrap as JSON-RPC. Content-Type: %s", contentType)
+			f.wrapAsJSONRPC = true
 		}
 		return api.Continue
 	}
@@ -246,13 +258,25 @@ func (f *filter) EncodeData(buffer api.BufferInstance, endStream bool) api.Statu
 		ret = f.encodeDataFromRestUpstream(buffer, endStream)
 	case common.SSEUpstream:
 		api.LogDebugf("Encoding data from SSE upstream")
+		// For SSEUpstream with non-SSE response (error case), wrap as JSON-RPC
+		if f.wrapAsJSONRPC {
+			if !endStream {
+				return api.StopAndBuffer
+			}
+			f.wrapBufferIfNotJSONRPC(buffer)
+			return api.Continue
+		}
 		ret = f.encodeDataFromSSEUpstream(buffer, endStream)
 		if endStream {
 			// Always continue as long as the stream has ended.
 			ret = api.Continue
 		}
 	case common.StreamableUpstream:
-		// Do nothing for streamable upstream
+		// For streamable upstream, buffer and wrap non-JSON-RPC responses
+		if !endStream {
+			return api.StopAndBuffer
+		}
+		f.wrapBufferIfNotJSONRPC(buffer)
 	}
 	return ret
 }
@@ -264,6 +288,12 @@ func (f *filter) encodeDataFromRestUpstream(buffer api.BufferInstance, endStream
 	if !endStream {
 		return api.StopAndBuffer
 	}
+
+	// Wrap non-JSON-RPC response if needed (for proxy mode without SSE)
+	if f.proxyURL != nil && f.serverName == "" {
+		f.wrapBufferIfNotJSONRPC(buffer)
+	}
+
 	if f.proxyURL != nil && f.config.redisClient != nil {
 		sessionID := f.proxyURL.Query().Get("sessionId")
 		if sessionID != "" {
@@ -341,6 +371,22 @@ func (f *filter) encodeDataFromSSEUpstream(buffer api.BufferInstance, endStream 
 
 	f.needProcess = false
 	return api.Continue
+}
+
+// wrapBufferIfNotJSONRPC checks if the buffer contains a JSON-RPC response,
+// and if not, wraps it into JSON-RPC error format.
+func (f *filter) wrapBufferIfNotJSONRPC(buffer api.BufferInstance) {
+	body := buffer.Bytes()
+	// Check if response is already JSON-RPC format
+	if common.IsJSONRPCResponse(body) {
+		api.LogDebugf("Response is already JSON-RPC format, no wrapping needed")
+		return
+	}
+
+	// Wrap non-JSON-RPC response into JSON-RPC error format
+	api.LogDebugf("Wrapping non-JSON-RPC response: status=%d, body=%s", f.upstreamStatusCode, string(body))
+	wrapped := common.WrapHTTPResponseAsJSONRPC(f.upstreamStatusCode, string(body))
+	_ = buffer.Set(wrapped)
 }
 
 func (f *filter) rewriteEndpointUrl(endpointUrl string) (bool, string) {
